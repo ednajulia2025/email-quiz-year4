@@ -109,7 +109,8 @@
             <form id="emailForm" class="space-y-4">
                 <div>
                     <label class="block text-slate-700 font-medium mb-1">To:</label>
-                    <input type="text" id="emailTo" class="w-full bg-slate-100 cursor-not-allowed text-slate-600" readonly>
+                    <!-- 'To' field is now editable -->
+                    <input type="text" id="emailTo" class="w-full" placeholder="e.g., lola@sklmail.com" required>
                 </div>
                 <div>
                     <label for="subject" class="block text-slate-700 font-medium mb-1">Subject:</label>
@@ -162,7 +163,8 @@
                 </div>
                 <div>
                     <label class="block text-slate-700 font-medium mb-1">Your friend,</label>
-                    <input type="text" id="writerName" class="w-full bg-slate-100 cursor-not-allowed text-slate-600" readonly>
+                    <!-- 'Your friend' field is now editable -->
+                    <input type="text" id="writerName" class="w-full" placeholder="Your Name" required>
                 </div>
 
                 <button type="submit" class="btn btn-primary w-full mt-6">Prepare Email</button>
@@ -180,9 +182,9 @@
     </div>
 
     <script>
-        let studentName = ''; // Global variable to store student's name
+        let studentName = ''; // Global variable to store student's name from initial input
         let currentScenario = {}; // Global variable to store the currently selected scenario
-        const teacherEmail = 'g-06520950@moe-dl.edu.my'; // Teacher's email address (UPDATED)
+        const teacherEmail = 'g-06520950@moe-dl.edu.my'; // Teacher's email address
 
         // Array of quiz scenarios
         const scenarios = [
@@ -283,10 +285,13 @@
             const randomIndex = Math.floor(Math.random() * scenarios.length);
             currentScenario = scenarios[randomIndex];
 
-            // Update email details
-            document.getElementById('emailTo').value = currentScenario.recipient + currentScenario.emailSuffix;
+            // Update placeholders for editable fields
+            document.getElementById('emailTo').placeholder = currentScenario.recipient + currentScenario.emailSuffix;
+            document.getElementById('writerName').placeholder = 'Your Name'; // Generic placeholder for writer's name
+
+            // Update other email details
             document.getElementById('subject').placeholder = currentScenario.subjectPlaceholder;
-            document.getElementById('greetings').placeholder = currentScenario.greetingsPlaceholder; // Set greetings placeholder
+            document.getElementById('greetings').placeholder = currentScenario.greetingsPlaceholder;
             document.getElementById('scenarioPrompt').innerHTML = currentScenario.prompt;
             document.getElementById('recipientNameInPrompt').textContent = currentScenario.recipient;
 
@@ -316,9 +321,8 @@
             const studentNameInput = document.getElementById('studentName');
             const startQuizBtn = document.getElementById('startQuizBtn');
             const emailForm = document.getElementById('emailForm');
-            const writerNameInput = document.getElementById('writerName');
             const displayStudentName = document.getElementById('displayStudentName');
-            const sendEmailBtn = document.getElementById('sendEmailBtn'); // New button
+            const sendEmailBtn = document.getElementById('sendEmailBtn');
             const restartQuizBtn = document.getElementById('restartQuizBtn');
 
             // Initialize the quiz with a random scenario when the page loads
@@ -328,13 +332,12 @@
             startQuizBtn.addEventListener('click', () => {
                 const name = studentNameInput.value.trim();
                 if (name) {
-                    studentName = name;
-                    writerNameInput.value = studentName; // Set writer's name in the email template
+                    studentName = name; // Store the student's name from the initial input
                     nameInputSection.classList.add('hidden');
                     quizSection.classList.remove('hidden');
                     emailForm.reset(); // Clear any pre-filled fields from previous attempt
-                    // Ensure writerNameInput is reset and then set
-                    document.getElementById('writerName').value = studentName;
+                    // Re-initialize scenario to set correct placeholders after form reset
+                    initializeQuizScenario();
                 } else {
                     showMessageBox('Please enter your name to start the quiz.');
                 }
@@ -344,7 +347,8 @@
             emailForm.addEventListener('submit', (event) => {
                 event.preventDefault(); // Prevent default form submission
 
-                // Get all input values for the email
+                // Get all input values for the email, including the newly editable ones
+                const emailToValue = document.getElementById('emailTo').value.trim();
                 const emailSubject = document.getElementById('subject').value.trim();
                 const emailGreetings = document.getElementById('greetings').value.trim();
                 const emailWhen = document.getElementById('when').value.trim();
@@ -355,15 +359,18 @@
                 const emailNext = document.getElementById('next').value.trim();
                 const emailFinally = document.getElementById('finally').value.trim();
                 const emailGoodbye = document.getElementById('goodbye').value.trim();
+                const emailWriterName = document.getElementById('writerName').value.trim(); // Get writer's name from input
 
-                // Construct the email body based on the template
-                let emailBody = `${emailGreetings}\n\n`;
+                // Construct the email body based on the template, using user's input for 'To' and 'Your friend'
+                let emailBody = `To: ${emailToValue}\n`; // Include the 'To' field content here
+                emailBody += `Subject: ${emailSubject}\n\n`; // Include the 'Subject' field content here
+                emailBody += `${emailGreetings}\n\n`;
                 emailBody += `${emailWhen}, ${emailWho} ${emailBigWhat} ${emailWhere}.\n`;
                 emailBody += `Firstly, ${emailFirstly}.\n`;
                 emailBody += `Next, ${emailNext}.\n`;
                 emailBody += `Finally, ${emailFinally}.\n\n`;
                 emailBody += `${emailGoodbye}\n\n`;
-                emailBody += `Your friend, \n${studentName}`;
+                emailBody += `Your friend, \n${emailWriterName}`; // Use the user's input for writer's name
 
                 // Set data attributes on the sendEmailBtn for later use
                 sendEmailBtn.dataset.subject = `Email Quiz Submission from ${studentName}: ${emailSubject}`;
@@ -386,7 +393,7 @@
             restartQuizBtn.addEventListener('click', () => {
                 // Reset form fields
                 emailForm.reset();
-                studentNameInput.value = ''; // Clear student name input
+                studentNameInput.value = ''; // Clear initial student name input
                 studentName = ''; // Reset global student name
 
                 // Initialize a new scenario for the next quiz attempt
