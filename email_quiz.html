@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Writing Quiz</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for Inter font and general body styling */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-grey background */
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* Align to start for better scrolling experience */
+            min-height: 100vh;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        /* Specific input styling for better visibility and rounded corners */
+        input[type="text"], textarea {
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1; /* border-slate-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            transition: all 0.2s ease-in-out;
+            background-color: #ffffff; /* White background for inputs */
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); /* Subtle inner shadow */
+        }
+        input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #6366f1; /* indigo-500 */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); /* ring-indigo-200 */
+        }
+        /* Button styling with shadows and rounded corners */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 0.5rem; /* rounded-lg */
+            font-weight: 600; /* font-semibold */
+            transition: all 0.2s ease-in-out;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* shadow-md */
+        }
+        .btn-primary {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            border: none;
+        }
+        .btn-primary:hover {
+            background-color: #4338ca; /* indigo-700 */
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Slightly larger shadow on hover */
+        }
+        .btn-secondary {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #1e293b; /* slate-800 */
+            border: none;
+        }
+        .btn-secondary:hover {
+            background-color: #cbd5e1; /* slate-300 */
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            padding: 25px;
+            border-radius: 0.75rem;
+            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            max-width: 90%; /* Responsive width */
+            text-align: center;
+        }
+        .message-box button {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body class="selection:bg-indigo-300 selection:text-indigo-900">
+
+    <!-- Message Box for alerts -->
+    <div id="messageBox" class="message-box">
+        <p id="messageContent" class="text-lg font-semibold text-slate-800"></p>
+        <button onclick="hideMessageBox()" class="btn btn-primary mt-4">OK</button>
+    </div>
+
+    <div id="quizContainer" class="bg-white p-8 md:p-10 rounded-xl shadow-lg w-full max-w-2xl border border-slate-200">
+        <h1 class="text-3xl font-bold text-center text-indigo-700 mb-6">Email Writing Quiz</h1>
+
+        <!-- Student Name Input Section -->
+        <div id="nameInputSection" class="mb-8">
+            <label for="studentName" class="block text-slate-700 text-lg font-semibold mb-2">Please enter your name:</label>
+            <input type="text" id="studentName" class="w-full px-4 py-2 text-lg rounded-md border border-slate-300 focus:ring-indigo-500 focus:border-indigo-500" placeholder="Your Name" required>
+            <button id="startQuizBtn" class="btn btn-primary w-full mt-6">Start Quiz</button>
+        </div>
+
+        <!-- Quiz Section (hidden initially) -->
+        <div id="quizSection" class="hidden">
+            <p id="scenarioPrompt" class="text-slate-600 mb-4 leading-relaxed"></p>
+            <p class="text-slate-600 mb-6 leading-relaxed">
+                In your email, tell <span id="recipientNameInPrompt" class="font-semibold text-indigo-600"></span>:
+                <ul id="detailsList" class="list-disc list-inside ml-4 text-slate-600">
+                    <!-- Details will be populated here by JavaScript -->
+                </ul>
+            </p>
+
+            <form id="emailForm" class="space-y-4">
+                <div>
+                    <label class="block text-slate-700 font-medium mb-1">To:</label>
+                    <input type="text" id="emailTo" class="w-full bg-slate-100 cursor-not-allowed text-slate-600" readonly>
+                </div>
+                <div>
+                    <label for="subject" class="block text-slate-700 font-medium mb-1">Subject:</label>
+                    <input type="text" id="subject" class="w-full" placeholder="e.g., Exciting Museum Trip!" required>
+                </div>
+                <div>
+                    <label for="greetings" class="block text-slate-700 font-medium mb-1">Greetings:</label>
+                    <input type="text" id="greetings" class="w-full" placeholder="e.g., Hi Lola," required>
+                </div>
+
+                <div class="space-y-2">
+                    <p class="text-slate-700 font-medium mb-1">Main Body:</p>
+                    <div class="flex flex-col md:flex-row md:space-x-4">
+                        <div class="w-full md:w-1/4">
+                            <label for="when" class="block text-slate-700 text-sm mb-1">When:</label>
+                            <input type="text" id="when" class="w-full" placeholder="e.g., Next Tuesday" required>
+                        </div>
+                        <div class="w-full md:w-1/4 mt-2 md:mt-0">
+                            <label for="who" class="block text-slate-700 text-sm mb-1">Who:</label>
+                            <input type="text" id="who" class="w-full" placeholder="e.g., our class" required>
+                        </div>
+                        <div class="w-full md:w-1/2 mt-2 md:mt-0">
+                            <label for="bigWhat" class="block text-slate-700 text-sm mb-1">Big WHAT:</label>
+                            <input type="text" id="bigWhat" class="w-full" placeholder="e.g., is going for a school trip" required>
+                        </div>
+                    </div>
+                    <div class="w-full">
+                        <label for="where" class="block text-slate-700 text-sm mb-1">Where:</label>
+                        <input type="text" id="where" class="w-full" placeholder="e.g., to the Mummy Museum." required>
+                    </div>
+
+                    <p class="text-slate-700 font-medium mt-4 mb-1">Details:</p>
+                    <div>
+                        <label for="firstly" class="block text-slate-700 text-sm mb-1">Firstly:</label>
+                        <textarea id="firstly" class="w-full h-16 resize-y" placeholder="e.g., we will see ancient Egyptian mummies and learn about their history." required></textarea>
+                    </div>
+                    <div>
+                        <label for="next" class="block text-slate-700 text-sm mb-1">Next:</label>
+                        <textarea id="next" class="w-full h-16 resize-y" placeholder="e.g., we will try to decipher hieroglyphs and walk through a recreated tomb." required></textarea>
+                    </div>
+                    <div>
+                        <label for="finally" class="block text-slate-700 text-sm mb-1">Finally:</label>
+                        <textarea id="finally" class="w-full h-16 resize-y" placeholder="e.g., we will visit the gift shop and maybe buy a souvenir!" required></textarea>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="goodbye" class="block text-slate-700 font-medium mb-1">Goodbye:</label>
+                    <input type="text" id="goodbye" class="w-full" placeholder="e.g., See you soon," required>
+                </div>
+                <div>
+                    <label class="block text-slate-700 font-medium mb-1">Your friend,</label>
+                    <input type="text" id="writerName" class="w-full bg-slate-100 cursor-not-allowed text-slate-600" readonly>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-full mt-6">Prepare Email</button>
+            </form>
+        </div>
+
+        <!-- Result Section (hidden initially) -->
+        <div id="resultSection" class="hidden text-center mt-8 p-6 bg-indigo-50 rounded-lg shadow-inner">
+            <h2 class="text-2xl font-bold text-indigo-700 mb-4">Email Prepared!</h2>
+            <p class="text-xl text-slate-800 mb-2">Student Name: <span id="displayStudentName" class="font-semibold text-indigo-800"></span></p>
+            <p class="text-xl text-slate-800 mb-4">Your email draft is ready. Please click the button below to open your email client and send it to your teacher.</p>
+            <button id="sendEmailBtn" class="btn btn-primary mt-4">Send Email to Teacher</button>
+            <button id="restartQuizBtn" class="btn btn-secondary mt-6 ml-4">Try Another Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        let studentName = ''; // Global variable to store student's name
+        let currentScenario = {}; // Global variable to store the currently selected scenario
+        const teacherEmail = 'g-06520950@moe-dl.edu.my'; // Teacher's email address (UPDATED)
+
+        // Array of quiz scenarios
+        const scenarios = [
+            {
+                recipient: 'Lola',
+                emailSuffix: '@sklmail.com',
+                subjectPlaceholder: 'Exciting Mummy Museum Trip!',
+                prompt: 'You are going for a school trip to the mummy museum. Write an email to your friend, <strong class="text-indigo-600">Lola</strong> to tell her about the trip.',
+                details: [
+                    'When you are going for the school trip',
+                    'Where you are going for the school trip',
+                    'What you are going to do at the museum'
+                ],
+                greetingsPlaceholder: 'e.g., Hi Lola,',
+                whenPlaceholder: 'e.g., Next Tuesday',
+                whoPlaceholder: 'e.g., our class',
+                bigWhatPlaceholder: 'e.g., is going for a school trip',
+                wherePlaceholder: 'e.g., to the Mummy Museum.',
+                firstlyPlaceholder: 'e.g., we will see ancient Egyptian mummies and learn about their history.',
+                nextPlaceholder: 'e.g., we will try to decipher hieroglyphs and walk through a recreated tomb.',
+                finallyPlaceholder: 'e.g., we will visit the gift shop and maybe buy a souvenir!'
+            },
+            {
+                recipient: 'Adam',
+                emailSuffix: '@sklmail.com',
+                subjectPlaceholder: 'My upcoming family vacation!',
+                prompt: 'You are going for a vacation with your family. Write an email to your friend, <strong class="text-indigo-600">Adam</strong> to tell him about the vacation.',
+                details: [
+                    'When you are going for the vacation',
+                    'Where you are going for the vacation',
+                    'What you are going to do during the vacation'
+                ],
+                greetingsPlaceholder: 'e.g., Hi Adam,',
+                whenPlaceholder: 'e.g., Next month',
+                whoPlaceholder: 'e.g., my family and I',
+                bigWhatPlaceholder: 'e.g., are going for a vacation',
+                wherePlaceholder: 'e.g., to Bali, Indonesia.',
+                firstlyPlaceholder: 'e.g., we will relax on the beautiful beaches and swim in the ocean.',
+                nextPlaceholder: 'e.g., we will explore ancient temples and try local Indonesian food.',
+                finallyPlaceholder: 'e.g., we will go snorkeling and see amazing fish!'
+            },
+            {
+                recipient: 'Zoe',
+                emailSuffix: '@sklmail.com',
+                subjectPlaceholder: 'Fun family picnic!',
+                prompt: 'You went for a picnic with your family. Write an email to your friend, <strong class="text-indigo-600">Zoe</strong> to tell her about the picnic.',
+                details: [
+                    'When you went for the picnic',
+                    'Where you went for the picnic',
+                    'What you did during the picnic'
+                ],
+                greetingsPlaceholder: 'e.g., Hi Zoe,',
+                whenPlaceholder: 'e.g., Last Saturday',
+                whoPlaceholder: 'e.g., my family and I',
+                bigWhatPlaceholder: 'e.g., went for a picnic',
+                wherePlaceholder: 'e.g., at the Central Park.',
+                firstlyPlaceholder: 'e.g., we laid out a big blanket and unpacked all our delicious food.',
+                nextPlaceholder: 'e.g., we played frisbee and flew a kite for hours in the sunshine.',
+                finallyPlaceholder: 'e.g., we ate sandwiches, fruits, and yummy cookies, then cleaned up before heading home.'
+            },
+            {
+                recipient: 'Mike',
+                emailSuffix: '@sklmail.com',
+                subjectPlaceholder: 'Exciting school trip to the zoo!',
+                prompt: 'You went for a school trip to the zoo with your friends. Write an email to your friend, <strong class="text-indigo-600">Mike</strong> to tell him about the trip.',
+                details: [
+                    'When you went for the school trip',
+                    'Where you went for the school trip',
+                    'What you did during the school trip'
+                ],
+                greetingsPlaceholder: 'e.g., Hi Mike,',
+                whenPlaceholder: 'e.g., Yesterday',
+                whoPlaceholder: 'e.g., our class and friends',
+                bigWhatPlaceholder: 'e.g., went for a school trip',
+                wherePlaceholder: 'e.g., to the city zoo.',
+                firstlyPlaceholder: 'e.g., we saw majestic lions roaring and playful monkeys swinging from trees.',
+                nextPlaceholder: 'e.g., we watched the penguin feeding show and learned about different animal habitats.',
+                finallyPlaceholder: 'e.g., we even got to pet some friendly goats in the petting zoo area!'
+            }
+        ];
+
+        // Function to show a custom message box
+        function showMessageBox(message) {
+            const messageBox = document.getElementById('messageBox');
+            const messageContent = document.getElementById('messageContent');
+            messageContent.textContent = message;
+            messageBox.style.display = 'block';
+        }
+
+        // Function to hide the custom message box
+        function hideMessageBox() {
+            document.getElementById('messageBox').style.display = 'none';
+        }
+
+        // Function to initialize or reset the quiz with a new scenario
+        function initializeQuizScenario() {
+            // Randomly select a scenario
+            const randomIndex = Math.floor(Math.random() * scenarios.length);
+            currentScenario = scenarios[randomIndex];
+
+            // Update email details
+            document.getElementById('emailTo').value = currentScenario.recipient + currentScenario.emailSuffix;
+            document.getElementById('subject').placeholder = currentScenario.subjectPlaceholder;
+            document.getElementById('greetings').placeholder = currentScenario.greetingsPlaceholder; // Set greetings placeholder
+            document.getElementById('scenarioPrompt').innerHTML = currentScenario.prompt;
+            document.getElementById('recipientNameInPrompt').textContent = currentScenario.recipient;
+
+            // Clear and populate details list
+            const detailsList = document.getElementById('detailsList');
+            detailsList.innerHTML = ''; // Clear previous details
+            currentScenario.details.forEach(detail => {
+                const li = document.createElement('li');
+                li.textContent = detail;
+                detailsList.appendChild(li);
+            });
+
+            // Update placeholders for input fields
+            document.getElementById('when').placeholder = currentScenario.whenPlaceholder;
+            document.getElementById('who').placeholder = currentScenario.whoPlaceholder;
+            document.getElementById('bigWhat').placeholder = currentScenario.bigWhatPlaceholder;
+            document.getElementById('where').placeholder = currentScenario.wherePlaceholder;
+            document.getElementById('firstly').placeholder = currentScenario.firstlyPlaceholder;
+            document.getElementById('next').placeholder = currentScenario.nextPlaceholder;
+            document.getElementById('finally').placeholder = currentScenario.finallyPlaceholder;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameInputSection = document.getElementById('nameInputSection');
+            const quizSection = document.getElementById('quizSection');
+            const resultSection = document.getElementById('resultSection');
+            const studentNameInput = document.getElementById('studentName');
+            const startQuizBtn = document.getElementById('startQuizBtn');
+            const emailForm = document.getElementById('emailForm');
+            const writerNameInput = document.getElementById('writerName');
+            const displayStudentName = document.getElementById('displayStudentName');
+            const sendEmailBtn = document.getElementById('sendEmailBtn'); // New button
+            const restartQuizBtn = document.getElementById('restartQuizBtn');
+
+            // Initialize the quiz with a random scenario when the page loads
+            initializeQuizScenario();
+
+            // Event listener for starting the quiz
+            startQuizBtn.addEventListener('click', () => {
+                const name = studentNameInput.value.trim();
+                if (name) {
+                    studentName = name;
+                    writerNameInput.value = studentName; // Set writer's name in the email template
+                    nameInputSection.classList.add('hidden');
+                    quizSection.classList.remove('hidden');
+                    emailForm.reset(); // Clear any pre-filled fields from previous attempt
+                    // Ensure writerNameInput is reset and then set
+                    document.getElementById('writerName').value = studentName;
+                } else {
+                    showMessageBox('Please enter your name to start the quiz.');
+                }
+            });
+
+            // Event listener for email form submission
+            emailForm.addEventListener('submit', (event) => {
+                event.preventDefault(); // Prevent default form submission
+
+                // Get all input values for the email
+                const emailSubject = document.getElementById('subject').value.trim();
+                const emailGreetings = document.getElementById('greetings').value.trim();
+                const emailWhen = document.getElementById('when').value.trim();
+                const emailWho = document.getElementById('who').value.trim();
+                const emailBigWhat = document.getElementById('bigWhat').value.trim();
+                const emailWhere = document.getElementById('where').value.trim();
+                const emailFirstly = document.getElementById('firstly').value.trim();
+                const emailNext = document.getElementById('next').value.trim();
+                const emailFinally = document.getElementById('finally').value.trim();
+                const emailGoodbye = document.getElementById('goodbye').value.trim();
+
+                // Construct the email body based on the template
+                let emailBody = `${emailGreetings}\n\n`;
+                emailBody += `${emailWhen}, ${emailWho} ${emailBigWhat} ${emailWhere}.\n`;
+                emailBody += `Firstly, ${emailFirstly}.\n`;
+                emailBody += `Next, ${emailNext}.\n`;
+                emailBody += `Finally, ${emailFinally}.\n\n`;
+                emailBody += `${emailGoodbye}\n\n`;
+                emailBody += `Your friend, \n${studentName}`;
+
+                // Set data attributes on the sendEmailBtn for later use
+                sendEmailBtn.dataset.subject = `Email Quiz Submission from ${studentName}: ${emailSubject}`;
+                sendEmailBtn.dataset.body = emailBody;
+
+                // Display results section
+                displayStudentName.textContent = studentName;
+                quizSection.classList.add('hidden');
+                resultSection.classList.remove('hidden');
+            });
+
+            // Event listener for sending the email
+            sendEmailBtn.addEventListener('click', () => {
+                const subject = encodeURIComponent(sendEmailBtn.dataset.subject);
+                const body = encodeURIComponent(sendEmailBtn.dataset.body);
+                window.location.href = `mailto:${teacherEmail}?subject=${subject}&body=${body}`;
+            });
+
+            // Event listener for restarting the quiz
+            restartQuizBtn.addEventListener('click', () => {
+                // Reset form fields
+                emailForm.reset();
+                studentNameInput.value = ''; // Clear student name input
+                studentName = ''; // Reset global student name
+
+                // Initialize a new scenario for the next quiz attempt
+                initializeQuizScenario();
+
+                // Hide result and quiz sections, show name input section
+                resultSection.classList.add('hidden');
+                quizSection.classList.add('hidden');
+                nameInputSection.classList.remove('hidden');
+            });
+        });
+    </script>
+</body>
+</html>
